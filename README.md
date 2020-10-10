@@ -124,5 +124,5 @@ While it may seem like a rather small thing, when presented with this:
 ```
 
 and realizing that this must be hand-curated by the developer to
-ensure proper execution order vs calling `task.run()`, the benefit becomes more apparent.
+ensure proper execution order vs simply declaring dependencies in the decorator and calling `task.run()`, the benefit becomes more apparent.
 
