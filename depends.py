@@ -27,15 +27,15 @@ class TaskGraph:
             return fn
         return wrapper
 
-    def run(self, *args):
+    def run(self, *args, **kwargs):
         '''Run tasks serially. Useful when:
             - tasks utilize shared mutable state
             - tasks are too small to be worth running in parallel
         '''
         for task in toposort_flatten(self._graph):
-            yield self._tasks[task](*args)
+            yield self._tasks[task](*args, **kwargs)
 
-    def run_parallel(self, *args):
+    def run_parallel(self, *args, **kwargs):
         '''Run independent tasks in parallel.
            For example, given dependencies a -> b and c -> d,
            (a, c) would be run in parallel, followed by (b, d)
@@ -47,7 +47,7 @@ class TaskGraph:
             with Pool(processes=self.pool_size) as pool:
                 results = []
                 for task in tasks:
-                    results.append(pool.apply_async(self._tasks[task], args))
+                    results.append(pool.apply_async(self._tasks[task], args, kwargs))
                 for result in results:
                     yield result.get()
 
@@ -62,45 +62,46 @@ task = TaskGraph()
 
 class Job:
     @task.requires()
-    def foo(self):
-        sleep(2)
+    def foo(self, delay):
+        sleep(delay)
         return "foo"
 
     @task.requires()
-    def bar(self):
-        sleep(2)
+    def bar(self, delay):
+        sleep(delay)
         return "bar"
 
     @task.requires(bar)
-    def baz(self):
-        sleep(2)
+    def baz(self, delay):
+        sleep(delay)
         return "baz"
 
     @task.requires(foo, bar, baz)
-    def qux(self):
-        sleep(2)
+    def qux(self, delay):
+        sleep(delay)
         return "qux"
 
     @task.requires(qux)
-    def quz(self):
-        sleep(2)
+    def quz(self, delay):
+        sleep(delay)
         return "quz"
 
     @task.requires(baz)
-    def xyzzy(self):
-        sleep(2)
+    def xyzzy(self, delay):
+        sleep(delay)
         return "xyzzy"
 
 
 @click.command()
 @click.option('--parallel', '-p', is_flag=True, help="Run tasks in parallel.")
-@click.option('--pool-size', '-z', type=click.IntRange(1, 8), help="Size of pool for parallel processing.")
-def main(parallel, pool_size):
+@click.option('--pool-size', '-z', type=click.IntRange(1, 8), default=4, help="Size of pool for parallel processing.")
+@click.option('--delay', '-d', type=click.IntRange(1, 10), default=0, help="Seconds to sleep in functions.")
+def main(parallel, pool_size, delay):
     job = Job()
     task.pool_size = pool_size
     run = task.run_parallel if parallel else task.run
 
-    for result in run(job):
+    for result in run(job, delay=delay):
         print(f"finished {result}")
 
 
