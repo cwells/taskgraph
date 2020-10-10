@@ -28,7 +28,9 @@ class TaskGraph:
         return wrapper
 
     def run(self, *args):
-        '''Run tasks serially.
+        '''Run tasks serially. Useful when:
+            - tasks utilize shared mutable state
+            - tasks are too small to be worth running in parallel
         '''
         for task in toposort_flatten(self._graph):
             yield self._tasks[task](*args)
@@ -38,6 +40,8 @@ class TaskGraph:
            For example, given dependencies a -> b and c -> d,
            (a, c) would be run in parallel, followed by (b, d)
            being run in parallel.
+           Tasks should not share state unless appropriate guardrails
+           are in place.
         '''
         for tasks in toposort(self._graph):
             with Pool(processes=self.pool_size) as pool:

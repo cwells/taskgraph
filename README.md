@@ -1,8 +1,11 @@
+Problem
+-------
 I was looking around through the `pdl-person-build` repo and saw some opportunity for improvement, specifically around how function dependencies are handled.
 
-The current method appears to be simply keeping track of which methods have been called and comparing that list to the current function's dependency list.
+The current method appears to be simply keeping track of which methods have already been called, comparing that list to the current function's dependency list, and throwing an exception if there's a dependency missing
+from the completed list.
 
-The only enforcement done is to throw an exception if a function is called out of order, so the programmer effectively has to declare the dependency twice (once in the decorator, and again by explicitly calling the function in the correct sequence).
+As such, the programmer effectively has to declare the dependency twice (once in the decorator, and again by explicitly calling the function in the correct sequence later on). Worse, these dependencies are generally declared far apart from each other in the code.
 
 I've written a small PoC showing how calculating the dependency tree in advance provides several benefits:
 
@@ -29,6 +32,19 @@ that same relationship later on by calling them in order:
 def run(self):
     self.validate_fields()
     self.clean_fields_pre_redis()
+    ...
+```
+
+Proposed state
+--------------
+```python
+@task.requires(validate_fields)
+def clean_fields_pre_redis(self):
+```
+
+```python
+def run(self):
+    task.run(self)
 ```
 
 Cost
@@ -39,8 +55,8 @@ The decorators are basically one-to-one, so the bulk of the code change would be
 3. including new library
 
 I did a quick grep through the source and it appears this decorator
-is only used 45 times, so I estimate this would take less than a day
-for one person to implement.
+is only used 45 times, and this would appear to be a largely mechanical
+refactor, so I estimate this would take one day to complete.
 
 While it may seem like a rather small thing, when presented with this:
 
