@@ -8,8 +8,9 @@ from toposort import toposort, toposort_flatten
 
 
 class TaskGraph:
-    '''directed acyclic graph representing dependency tree. tasks
-       may be run serially or in parallel.
+    '''Task dependency tree.
+       Tasks may be run serially or in parallel.
+       Declare tasks using @TaskGraph.requires().
     '''
     def __init__(self, pool_size=4):
         self._graph = {}
@@ -17,20 +18,27 @@ class TaskGraph:
         self.pool_size = pool_size
 
     def requires(self, *deps):
+        '''decorator for declaring a function as a task as well as
+           listing other tasks as dependencies.
+        '''
         def wrapper(fn):
             self._graph[fn.__name__] = set(f.__name__ for f in deps or [])
             self._tasks[fn.__name__] = fn
             return fn
         return wrapper
 
-    def sort(self):
-        return toposort_flatten(self._graph)
-
     def run(self, *args):
-        for task in self.sort():
+        '''Run tasks serially.
+        '''
+        for task in toposort_flatten(self._graph):
             yield self._tasks[task](*args)
 
     def run_parallel(self, *args):
+        '''Run independent tasks in parallel.
+           For example, given dependencies a -> b and c -> d,
+           (a, c) would be run in parallel, followed by (b, d)
+           being run in parallel.
+        '''
         for tasks in toposort(self._graph):
             with Pool(processes=self.pool_size) as pool:
                 results = []
@@ -40,6 +48,12 @@ class TaskGraph:
                     yield result.get()
 
 
+#
+# This has to be top-level due to the way Processing sends jobs to
+# worker processes (it can only pickle top-level objects). If this
+# is an issue, replace Processing with some other parallel-processing
+# library such as Threading.
+#
 task = TaskGraph()
 
 class Job:
