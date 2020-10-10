@@ -1,0 +1,2 @@
+click==7.1.2
+toposort==1.5
