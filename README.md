@@ -38,6 +38,8 @@ def run(self):
 Proposed state
 --------------
 ```python
+task = TaskGraph()
+
 @task.requires(validate_fields)
 def clean_fields_pre_redis(self):
 ```
