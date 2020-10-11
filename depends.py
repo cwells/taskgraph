@@ -2,6 +2,7 @@
 
 import json
 import time
+from functools import partial
 from multiprocessing import Pool
 
 import click
@@ -13,10 +14,9 @@ class TaskGraph:
     Tasks may be run serially or in parallel.
     Declare tasks using @TaskGraph.requires().
     '''
-    def __init__(self, pool_size=4):
+    def __init__(self):
         self._graph = {}
         self._tasks = {}
-        self.pool_size = pool_size
 
     def requires(self, *deps):
         '''Decorator for declaring a function as a task as well as listing
@@ -28,6 +28,11 @@ class TaskGraph:
             return fn
         return wrapper
 
+    def graph(self):
+        '''Return formatted graph representation as string.
+        '''
+        return "(" + ") -> (".join(', '.join(s) for s in toposort(self._graph)) + ")"
+
     def run(self, *args, **kwargs):
         '''Run tasks serially.
         Useful when:
@@ -37,15 +42,13 @@ class TaskGraph:
         for task in toposort_flatten(self._graph):
             yield self._tasks[task](*args, **kwargs)
 
-    def run_parallel(self, *args, **kwargs):
+    def run_parallel(self, *args, pool_size=4, **kwargs):
         '''Run independent tasks in parallel.
         For example, given dependencies a -> b and c -> d, (a, c) would be run
         in parallel, followed by (b, d) being run in parallel.
         '''
-        graph = list(toposort(self._graph))
-        print(' -> '.join(str(s) for s in graph))
-        for tasks in graph:
-            with Pool(processes=self.pool_size) as pool:
+        for tasks in toposort(self._graph):
+            with Pool(processes=pool_size) as pool:
                 results = []
                 for task in tasks:
                     results.append(pool.apply_async(self._tasks[task], args, kwargs))
@@ -69,47 +72,51 @@ class Job:
     def __init__(self):
         self.start_time = time.time()
 
-    def do_work(self, task_name, delay):
-        # print(task_name, end=" ")
+    def do_work(self, delay):
         time.sleep(delay)
         return round(time.time() - self.start_time, 1)
 
     @task.requires()
     def foo(self, delay):
-        return { "foo": self.do_work("foo", delay) }
+        return { "foo": self.do_work(delay) }
 
     @task.requires()
     def bar(self, delay):
-        return { "bar": self.do_work("bar", delay) }
+        return { "bar": self.do_work(delay) }
 
     @task.requires(bar)
     def baz(self, delay):
-        return { "baz": self.do_work("baz", delay) }
+        return { "baz": self.do_work(delay) }
 
-    @task.requires(foo, bar, baz)
+    @task.requires(foo, bar)
     def qux(self, delay):
-        return { "qux": self.do_work("qux", delay) }
+        return { "qux": self.do_work(delay) }
 
-    @task.requires(qux)
+    @task.requires(qux, baz)
     def quz(self, delay):
-        return { "quz": self.do_work("quz", delay) }
+        return { "quz": self.do_work(delay) }
 
-    @task.requires(baz)
+    @task.requires(foo, bar)
     def xyzzy(self, delay):
         time.sleep(delay)
-        return { "xyzzy": self.do_work("xyzzy", delay) }
+        return { "xyzzy": self.do_work(delay) }
 
 
 @click.command()
 @click.option('--parallel', '-p', is_flag=True, help="Run tasks in parallel.")
 @click.option('--pool-size', '-z', type=click.IntRange(1, 8), default=4, help="Size of pool for parallel processing.")
 @click.option('--delay', '-d', type=click.IntRange(0, 10), default=0, help="Seconds to time.sleep in functions.")
-def main(parallel, pool_size, delay):
+@click.option('--graph', '-g', is_flag=True, help="Dump graph to stdout and exit.")
+def main(parallel, pool_size, delay, graph):
     job = Job()
-    task.pool_size = pool_size
-    run = task.run_parallel if parallel else task.run
 
+    if graph:
+        print(f"Grouped tasks can be run in parallel: {task.graph()}\n")
+        raise SystemExit
+
+    run = partial(task.run_parallel, pool_size=pool_size) if parallel else task.run
     record = {}
+
     for result in run(job, delay=delay):
         record.update(result)
 
