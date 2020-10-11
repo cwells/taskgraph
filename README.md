@@ -16,6 +16,7 @@ Benefits
 1. programmer only needs to declare dependencies once, in the decorator
 2. less overhead per function call
 3. parallelization potential for non-interdependent functions
+4. overall reduction in LoC
 
 Current state
 -------------
@@ -26,7 +27,7 @@ def clean_fields_pre_redis(self):
 ```
 
 The programmer here declares the dependency `validate_fields -> clean_fields_pre_redis`, but then has to explicitly re-declare
-that same relationship later on by calling them in order:
+that same relationship later on by explicitly calling them in order:
 
 ```python
 def run(self):
@@ -59,10 +60,12 @@ One class, one decorator, one function.
 
 Cost
 ----
-The decorators are basically one-to-one, so the bulk of the code change would be:
-1. replacing decorators
-2. deleting explicit function calls in lieu of `task.run()`.
-3. including new library (toposort)
+The decorators are basically drop-in replacements, so the bulk of the code change would involve:
+1. deploying new library (toposort).
+2. importing/instantiating `TaskGraph` class.
+3. removing `@record_function_completion`.
+4. replacing `@dependent_on` with `@task.requires`.
+5. replacing explicit function calls with `task.run()`.
 
 I did a quick grep through the source and it appears this decorator
 is only used 45 times, and this would appear to be a largely mechanical
