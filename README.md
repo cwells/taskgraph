@@ -25,7 +25,7 @@ def clean_fields_pre_redis(self):
     ...
 ```
 
-The programmer here declares the dependency `validate_fields -> clean_fields_pre_redis`, but then has to explicitly re-declare
+The programmer here declares the dependency `validate_fields -> clean_fields_pre_redis`, but then has to re-declare
 that same relationship later on by explicitly calling them in order:
 
 ```python
