@@ -2,6 +2,7 @@
 
 import json
 import time
+from collections import ChainMap
 from functools import partial
 from multiprocessing import Pool
 
@@ -110,17 +111,13 @@ class Job:
 @click.option('--delay', '-d', type=click.IntRange(0, 10), default=0, help="Seconds to time.sleep in functions.")
 @click.option('--graph', '-g', is_flag=True, help="Dump graph to stdout and exit (affected by -p flag).")
 def main(parallel, pool_size, delay, graph):
-    job = Job()
-
     if graph:
         print(task.graph(parallel))
         raise SystemExit
 
+    job = Job()
     run = partial(task.run_parallel, pool_size=pool_size) if parallel else task.run
-    record = {}
-
-    for result in run(job, delay=delay):
-        record.update(result)
+    record = dict(ChainMap(*run(job, delay=delay)))
 
     print(json.dumps(record, indent=2))
 
