@@ -22,6 +22,7 @@ This is an example from the current code:
 ```python
 @dependent_on(validate_fields)
 def clean_fields_pre_redis(self):
+    ...
 ```
 
 The programmer here declares the dependency `validate_fields -> clean_fields_pre_redis`, but then has to explicitly re-declare
