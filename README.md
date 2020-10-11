@@ -7,9 +7,7 @@ from the completed list.
 
 As such, the programmer effectively has to declare the dependency twice (once in the decorator, and again by explicitly calling the function in the correct sequence later on). Worse, these dependencies are generally declared far apart from each other in the code.
 
-I've written a small PoC showing how calculating the dependency tree in advance provides several benefits:
-
-https://gist.github.com/cwells/b8271d139742f2d45ef481bddad76ddd
+This repo is a small PoC showing how pre-calculating the dependency tree provides several benefits.
 
 Benefits
 --------
