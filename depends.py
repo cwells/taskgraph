@@ -1,7 +1,8 @@
 #!/bin/env python
 
+import json
+import time
 from multiprocessing import Pool
-from time import sleep
 
 import click
 from toposort import toposort, toposort_flatten
@@ -9,8 +10,8 @@ from toposort import toposort, toposort_flatten
 
 class TaskGraph:
     '''Task dependency tree.
-       Tasks may be run serially or in parallel.
-       Declare tasks using @TaskGraph.requires().
+    Tasks may be run serially or in parallel.
+    Declare tasks using @TaskGraph.requires().
     '''
     def __init__(self, pool_size=4):
         self._graph = {}
@@ -18,8 +19,8 @@ class TaskGraph:
         self.pool_size = pool_size
 
     def requires(self, *deps):
-        '''decorator for declaring a function as a task as well as
-           listing other tasks as dependencies.
+        '''Decorator for declaring a function as a task as well as listing
+        other tasks as dependencies.
         '''
         def wrapper(fn):
             self._graph[fn.__name__] = set(f.__name__ for f in deps or [])
@@ -28,8 +29,9 @@ class TaskGraph:
         return wrapper
 
     def run(self, *args, **kwargs):
-        '''Run tasks serially. Useful when:
-            - tasks utilize shared mutable state
+        '''Run tasks serially.
+        Useful when:
+            - tasks share mutable state
             - tasks are too small to be worth running in parallel
         '''
         for task in toposort_flatten(self._graph):
@@ -37,13 +39,12 @@ class TaskGraph:
 
     def run_parallel(self, *args, **kwargs):
         '''Run independent tasks in parallel.
-           For example, given dependencies a -> b and c -> d,
-           (a, c) would be run in parallel, followed by (b, d)
-           being run in parallel.
-           Tasks should not share state unless appropriate guardrails
-           are in place.
+        For example, given dependencies a -> b and c -> d, (a, c) would be run
+        in parallel, followed by (b, d) being run in parallel.
         '''
-        for tasks in toposort(self._graph):
+        graph = list(toposort(self._graph))
+        print(' -> '.join(str(s) for s in graph))
+        for tasks in graph:
             with Pool(processes=self.pool_size) as pool:
                 results = []
                 for task in tasks:
@@ -65,49 +66,54 @@ class TaskGraph:
 task = TaskGraph()
 
 class Job:
+    def __init__(self):
+        self.start_time = time.time()
+
+    def do_work(self, task_name, delay):
+        # print(task_name, end=" ")
+        time.sleep(delay)
+        return round(time.time() - self.start_time, 1)
+
     @task.requires()
     def foo(self, delay):
-        sleep(delay)
-        return "foo"
+        return { "foo": self.do_work("foo", delay) }
 
     @task.requires()
     def bar(self, delay):
-        sleep(delay)
-        return "bar"
+        return { "bar": self.do_work("bar", delay) }
 
     @task.requires(bar)
     def baz(self, delay):
-        sleep(delay)
-        return "baz"
+        return { "baz": self.do_work("baz", delay) }
 
     @task.requires(foo, bar, baz)
     def qux(self, delay):
-        sleep(delay)
-        return "qux"
+        return { "qux": self.do_work("qux", delay) }
 
     @task.requires(qux)
     def quz(self, delay):
-        sleep(delay)
-        return "quz"
+        return { "quz": self.do_work("quz", delay) }
 
     @task.requires(baz)
     def xyzzy(self, delay):
-        sleep(delay)
-        return "xyzzy"
+        time.sleep(delay)
+        return { "xyzzy": self.do_work("xyzzy", delay) }
 
 
 @click.command()
 @click.option('--parallel', '-p', is_flag=True, help="Run tasks in parallel.")
 @click.option('--pool-size', '-z', type=click.IntRange(1, 8), default=4, help="Size of pool for parallel processing.")
-@click.option('--delay', '-d', type=click.IntRange(1, 10), default=0, help="Seconds to sleep in functions.")
+@click.option('--delay', '-d', type=click.IntRange(0, 10), default=0, help="Seconds to time.sleep in functions.")
 def main(parallel, pool_size, delay):
     job = Job()
     task.pool_size = pool_size
     run = task.run_parallel if parallel else task.run
 
+    record = {}
     for result in run(job, delay=delay):
-        print(f"finished {result}")
+        record.update(result)
 
+    print(json.dumps(record, indent=2))
 
 if __name__ == '__main__':
     main()
