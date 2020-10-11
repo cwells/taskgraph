@@ -13,10 +13,10 @@ https://gist.github.com/cwells/b8271d139742f2d45ef481bddad76ddd
 
 Benefits
 --------
-1. programmer only needs to declare dependencies once, in the decorator
-2. less overhead per function call
-3. parallelization potential for non-interdependent functions
-4. overall reduction in LoC
+1. Programmer only needs to declare dependencies once, in the decorator, and execution order is derived from that.
+2. Less overhead per function call since it doesn't need to repeatedly check the completed list.
+3. Parallelization potential for non-interdependent functions.
+4. Overall reduction in LoC.
 
 Current state
 -------------
