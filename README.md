@@ -40,6 +40,7 @@ Further, functions must utilize a second decorator to keep the completed list up
 ```python
 @decorate_all_methods(record_function_completion)
 class PersonPostProcessor(object):
+    ...
 ```
 
 Proposed state
@@ -49,6 +50,7 @@ task = TaskGraph()
 
 @task.requires(validate_fields)
 def clean_fields_pre_redis(self):
+    ...
 ```
 
 ```python
