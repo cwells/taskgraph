@@ -123,8 +123,8 @@ While it may seem like a rather small thing, when presented with this:
         return self.person
 ```
 
-and realizing that this must be hand-curated by the developer to ensure proper execution order vs simply declaring dependencies
-in the decorator and calling `task.run()`, the benefit becomes more apparent.
+Realizing that this must be hand-curated by the developer to ensure proper execution order vs simply declaring dependencies
+in the decorator and calling `task.run()` makes the benefits becomes more apparent.
 
 
 Additional opportunities
