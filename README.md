@@ -196,5 +196,5 @@ be avoided. It makes parallelization impossible, hides data changes in
 side-effects, and generally encourages write-only code.
 
 Refactoring the methods to be decorated with `task.requires` to be more
-functional likely allows for parallelization of some portion of the current
+functional should allow for parallelization of some portion of the current
 code.
