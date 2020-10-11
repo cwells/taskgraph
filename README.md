@@ -193,7 +193,9 @@ and globally-scoped shared mutable state. The same issues that plague
 globally-scoped mutable state are also present with class-scoped mutable state;
 they differ only in scale. Shared mutable state is an anti-pattern that should
 be avoided. It makes parallelization impossible, hides data changes in
-side-effects, and generally encourages write-only code.
+side-effects, and generally encourages write-only code. For example,
+[this bug](https://github.com/peopledatalabs/pdl-person-build/issues/92) is a
+direct result of this utilizing this pattern.
 
 Refactoring the methods to be decorated with `task.requires` to be more
 functional should allow for parallelization of some portion of the current
