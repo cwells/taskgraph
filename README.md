@@ -123,19 +123,19 @@ While it may seem like a rather small thing, when presented with this:
         return self.person
 ```
 
-and realizing that this must be hand-curated by the developer to
-ensure proper execution order vs simply declaring dependencies in the decorator and calling `task.run()`, the benefit becomes more apparent.
+and realizing that this must be hand-curated by the developer to ensure proper execution order vs simply declaring dependencies
+in the decorator and calling `task.run()`, the benefit becomes more apparent.
 
 
 Additional opportunities
 ------------------------
-In addition to this, many of the classes leverage the pattern of modifying shared mutable state. Methods should be refactored to return values
-rather than directly modifying a shared object.
+In addition to this, many of the classes leverage the pattern of modifying shared mutable state (e.g. directly modifying `self.record`).
+Methods should be refactored to return values rather than directly modifying a shared object.
 
 Conceptually, there's no difference between class-scoped shared mutable state and globally-scoped shared mutable state. The same issues that
 plague globally-scoped mutable state are also present with class-scoped mutable state; they differ only in scale. Shared mutable state
 is an anti-pattern that should be avoided. It makes parallelization impossible, hides data changes in side-effects, and generally encourages
 write-only code.
 
-Refactoring the methods to be decorated with `task.requires` to be more functional would likely allow for parallelization of some portion of
+Refactoring the methods to be decorated with `task.requires` to be more functional likely allows for parallelization of some portion of
 the current code.
