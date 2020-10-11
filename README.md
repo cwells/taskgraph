@@ -21,12 +21,12 @@ Running the code
 ----------------
 Serial execution:
 ```
-$ python taskgraph.py -g
+$ python demo.py -g
 bar -> foo -> baz -> qux -> xyzzy -> quz
 ```
 
 ```json
-$ python taskgraph.py -d 2
+$ python demo.py -d 2
 {
   "bar": 2.0,
   "foo": 4.0,
@@ -38,12 +38,12 @@ $ python taskgraph.py -d 2
 ```
 Parallel execution:
 ```
-$ python taskgraph.py -g -p
+$ python demo.py -g -p
 (bar, foo) -> (qux, xyzzy, baz) -> (quz)
 ```
 
 ```json
-$ python taskgraph.py -d 2 -p
+$ python demo.py -d 2 -p
 {
   "bar": 2.0,
   "foo": 2.0,
