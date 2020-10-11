@@ -72,34 +72,40 @@ class Job:
     def __init__(self):
         self.start_time = time.time()
 
-    def do_work(self, delay):
+    def do_work(self, name, delay):
+        print(name, end=" ")
         time.sleep(delay)
         return round(time.time() - self.start_time, 1)
 
     @task.requires()
     def foo(self, delay):
-        return { "foo": self.do_work(delay) }
+        name = "foo"
+        return { name: self.do_work(name, delay) }
 
     @task.requires()
     def bar(self, delay):
-        return { "bar": self.do_work(delay) }
+        name = "bar"
+        return { name: self.do_work(name, delay) }
 
     @task.requires(bar)
     def baz(self, delay):
-        return { "baz": self.do_work(delay) }
+        name = "baz"
+        return { name: self.do_work(name, delay) }
 
     @task.requires(foo, bar)
     def qux(self, delay):
-        return { "qux": self.do_work(delay) }
+        name = "qux"
+        return { name: self.do_work(name, delay) }
 
     @task.requires(qux, baz)
     def quz(self, delay):
-        return { "quz": self.do_work(delay) }
+        name = "quz"
+        return { name: self.do_work(name, delay) }
 
     @task.requires(foo, bar)
     def xyzzy(self, delay):
-        time.sleep(delay)
-        return { "xyzzy": self.do_work(delay) }
+        name = "xyzzy"
+        return { name: self.do_work(name, delay) }
 
 
 @click.command()
@@ -120,7 +126,7 @@ def main(parallel, pool_size, delay, graph):
     for result in run(job, delay=delay):
         record.update(result)
 
-    print(json.dumps(record, indent=2))
+    print("\n", json.dumps(record, indent=2))
 
 if __name__ == '__main__':
     main()
