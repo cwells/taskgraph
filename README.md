@@ -1,18 +1,28 @@
 Problem
 -------
-I was looking around through the `pdl-person-build` repo and saw some opportunity for improvement, specifically around how function dependencies are handled.
+I was looking around through the `pdl-person-build` repo and saw some
+opportunity for improvement, specifically around how function dependencies are
+handled.
 
-The current method appears to be simply keeping track of which methods have already been called, comparing that list to the current function's dependency list, and throwing an exception if there's a dependency missing
-from the completed list.
+The current method appears to be simply keeping track of which methods have
+already been called, comparing that list to the current function's dependency
+list, and throwing an exception if there's a dependency missing from the
+completed list.
 
-As such, the programmer effectively has to declare the dependency twice (once in the decorator, and again by explicitly calling the function in the correct sequence later on). Worse, these dependencies are generally declared far apart from each other in the code.
+As such, the programmer effectively has to declare the dependency twice (once in
+the decorator, and again by explicitly calling the function in the correct
+sequence later on). Worse, these dependencies are generally declared far apart
+from each other in the code.
 
-This repo is a small PoC showing how pre-calculating the dependency tree provides several benefits.
+This repo is a small PoC showing how pre-calculating the dependency tree
+provides several benefits.
 
 Benefits
 --------
-1. Programmer only needs to declare dependencies once, in the decorator, and execution order is derived from that.
-2. Less overhead per function call since it doesn't need to repeatedly check the completed list.
+1. Programmer only needs to declare dependencies once, in the decorator, and
+execution order is derived from that.
+2. Less overhead per function call since it doesn't need to repeatedly check the
+completed list.
 3. Parallelization potential for non-interdependent functions.
 4. Overall reduction in LoC.
 
@@ -25,8 +35,9 @@ def clean_fields_pre_redis(self):
     ...
 ```
 
-The programmer here declares the dependency `validate_fields -> clean_fields_pre_redis`, but then has to re-declare
-that same relationship later on by explicitly calling them in order:
+The programmer here declares the dependency
+`validate_fields -> clean_fields_pre_redis`, but then has to re-declare that
+same relationship later on by explicitly calling them in order:
 
 ```python
 def run(self):
@@ -35,7 +46,8 @@ def run(self):
     ...
 ```
 
-Further, functions must utilize a second decorator to keep the completed list updated:
+Further, functions must utilize a second decorator to keep the completed list
+updated:
 
 ```python
 @decorate_all_methods(record_function_completion)
@@ -61,7 +73,8 @@ One class, one decorator, one function.
 
 Cost
 ----
-The decorators are basically drop-in replacements, so the bulk of the code change would involve:
+The decorators are basically drop-in replacements, so the bulk of the code
+change would involve:
 1. deploying new library (toposort).
 2. importing/instantiating `TaskGraph` class.
 3. removing `@record_function_completion`.
@@ -72,7 +85,12 @@ I did a quick grep through the source and it appears this decorator
 is only used 45 times, and this would appear to be a largely mechanical
 refactor, so I estimate this would take one day to complete.
 
-While it may seem like a rather small thing, when presented with this:
+While it may seem like a rather small thing, realize that the following list of
+function calls must be hand-curated by the developer to ensure proper execution
+order. Contrast that with simply declaring dependencies in a decorator and
+calling `task.run()` and the benefits becomes readily apparent.
+
+
 
 ```python
     def run(self):
@@ -127,19 +145,19 @@ While it may seem like a rather small thing, when presented with this:
         return self.person
 ```
 
-Realizing that this must be hand-curated by the developer to ensure proper execution order vs simply declaring dependencies
-in the decorator and calling `task.run()` makes the benefits becomes more apparent.
-
-
 Additional opportunities
 ------------------------
-In addition to this, many of the classes leverage the pattern of modifying shared mutable state (e.g. directly modifying `self.record`).
-Methods should be refactored to return values rather than directly modifying a shared object.
+In addition to this, many of the classes leverage the pattern of modifying
+shared mutable state (e.g. directly modifying `self.record`). Methods should be
+refactored to return values rather than directly modifying a shared object.
 
-Conceptually, there's no difference between class-scoped shared mutable state and globally-scoped shared mutable state. The same issues that
-plague globally-scoped mutable state are also present with class-scoped mutable state; they differ only in scale. Shared mutable state
-is an anti-pattern that should be avoided. It makes parallelization impossible, hides data changes in side-effects, and generally encourages
-write-only code.
+Conceptually, there's no difference between class-scoped shared mutable state
+and globally-scoped shared mutable state. The same issues that plague
+globally-scoped mutable state are also present with class-scoped mutable state;
+they differ only in scale. Shared mutable state is an anti-pattern that should
+be avoided. It makes parallelization impossible, hides data changes in
+side-effects, and generally encourages write-only code.
 
-Refactoring the methods to be decorated with `task.requires` to be more functional likely allows for parallelization of some portion of
-the current code.
+Refactoring the methods to be decorated with `task.requires` to be more
+functional likely allows for parallelization of some portion of the current
+code.
