@@ -9,11 +9,7 @@ import click
 
 from taskgraph import TaskGraph
 
-# This has to be top-level due to the way Processing sends jobs to worker
-# processes (it can only pickle top-level objects). If this is an issue,
-# replace Processing with some other parallel-processing library such as
-# Threading.
-#
+
 task = TaskGraph()
 
 class Job:
