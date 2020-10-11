@@ -28,10 +28,13 @@ class TaskGraph:
             return fn
         return wrapper
 
-    def graph(self):
+    def graph(self, parallel=False):
         '''Return formatted graph representation as string.
         '''
-        return "(" + ") -> (".join(', '.join(s) for s in toposort(self._graph)) + ")"
+        if parallel:
+            return "(" + ") -> (".join(', '.join(s) for s in toposort(self._graph)) + ")"
+
+        return ' -> '.join([ s for s in toposort_flatten(self._graph) ])
 
     def run(self, *args, **kwargs):
         '''Run tasks serially.
@@ -72,40 +75,33 @@ class Job:
     def __init__(self):
         self.start_time = time.time()
 
-    def do_work(self, name, delay):
-        print(name, end=" ")
+    def do_work(self, delay):
         time.sleep(delay)
         return round(time.time() - self.start_time, 1)
 
     @task.requires()
     def foo(self, delay):
-        name = "foo"
-        return { name: self.do_work(name, delay) }
+        return { "foo": self.do_work(delay) }
 
     @task.requires()
     def bar(self, delay):
-        name = "bar"
-        return { name: self.do_work(name, delay) }
+        return { "bar": self.do_work(delay) }
 
     @task.requires(bar)
     def baz(self, delay):
-        name = "baz"
-        return { name: self.do_work(name, delay) }
+        return { "baz": self.do_work(delay) }
 
     @task.requires(foo, bar)
     def qux(self, delay):
-        name = "qux"
-        return { name: self.do_work(name, delay) }
+        return { "qux": self.do_work(delay) }
 
     @task.requires(qux, baz)
     def quz(self, delay):
-        name = "quz"
-        return { name: self.do_work(name, delay) }
+        return { "quz": self.do_work(delay) }
 
     @task.requires(foo, bar)
     def xyzzy(self, delay):
-        name = "xyzzy"
-        return { name: self.do_work(name, delay) }
+        return { "xyzzy": self.do_work(delay) }
 
 
 @click.command()
@@ -117,7 +113,7 @@ def main(parallel, pool_size, delay, graph):
     job = Job()
 
     if graph:
-        print(f"Grouped tasks can be run in parallel: {task.graph()}\n")
+        print(task.graph(parallel))
         raise SystemExit
 
     run = partial(task.run_parallel, pool_size=pool_size) if parallel else task.run
@@ -126,7 +122,7 @@ def main(parallel, pool_size, delay, graph):
     for result in run(job, delay=delay):
         record.update(result)
 
-    print("\n", json.dumps(record, indent=2))
+    print(json.dumps(record, indent=2))
 
 if __name__ == '__main__':
     main()
