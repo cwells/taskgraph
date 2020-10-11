@@ -137,4 +137,5 @@ plague globally-scoped mutable state are also present with class-scoped mutable 
 is an anti-pattern that should be avoided. It makes parallelization impossible, hides data changes in side-effects, and generally encourages
 write-only code.
 
-Updating at least the methods to be decorated with `task.requires` would likely allow for parallelization of some portion of the current code.
+Refactoring the methods to be decorated with `task.requires` to be more functional would likely allow for parallelization of some portion of
+the current code.
