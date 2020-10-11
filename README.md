@@ -60,7 +60,7 @@ Benefits
 execution order is derived from that.
 2. Less overhead per function call since it doesn't need to repeatedly check the
 completed list.
-3. Parallelization potential for non-interdependent functions.
+3. Parallelization potential for methods without side-effects.
 4. Overall reduction in LoC.
 
 Current state
