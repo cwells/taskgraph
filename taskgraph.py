@@ -54,3 +54,27 @@ class TaskGraph:
                 for result in results:
                     yield result.get()
 
+    def pipe(self, *args, **kwargs):
+        '''Run tasks serially, and pass the merged return value from each task
+        as the argument to the next task.
+        '''
+        data = {}
+        for task in toposort_flatten(self._graph):
+            data.update(self._tasks[task](*args, data=data, **kwargs))
+        return data
+
+    def pipe_parallel(self, *args, pool_size=4, **kwargs):
+        '''Run independent tasks in parallel, and pass the merged return values
+        from each task group to the next task group.
+        '''
+        data = {}
+        kwargs['data'] = data
+
+        for tasks in toposort(self._graph):
+            with Pool(processes=pool_size) as pool:
+                results = []
+                for task in tasks:
+                    results.append(pool.apply_async(self._tasks[task], args, kwargs))
+                for result in results:
+                    data.update(result.get())
+        return data
