@@ -4,8 +4,7 @@ Print the graph:
 ```
 $ python demo.py run -g
 
-	(bar, foo) -> (xyzzy, baz, qux) -> (quz)
-
+	(foo) -> (bar) -> (xyzzy, qux, baz) -> (quz)
 ```
 
 Serial execution:
