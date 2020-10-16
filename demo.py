@@ -65,10 +65,9 @@ def cli():
 
 @cli.command()
 @click.option('--parallel', '-p', is_flag=True, help="Run tasks in parallel.")
-@click.option('--pool-size', '-z', type=click.IntRange(1, 8), default=4, help="Size of pool for parallel processing.")
 @click.option('--delay', '-d', type=click.IntRange(0, 10), default=0, help="Seconds to sleep in functions.")
 @click.option('--graph', '-g', is_flag=True, help="Dump graph to stdout and exit (affected by -p flag).")
-def run(parallel, pool_size, delay, graph):
+def run(parallel, delay, graph):
     if graph:
         print(Job.task)
         raise SystemExit

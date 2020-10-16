@@ -53,7 +53,7 @@ class TaskGraph:
         from each task group to the next task group.
         '''
         for taskset in toposort(self._graph):
-            with Pool(processes=4) as pool:
+            with Pool() as pool:
                 results = []
                 for task in taskset:
                     results.append(

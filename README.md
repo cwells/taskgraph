@@ -12,36 +12,36 @@ Serial execution:
 ```json
 $ python demo.py -d 1
 {
-  "bar": {
+  "foo": {
     "elapsed": 1.0,
     "finished": []
   },
-  "foo": {
+  "bar": {
     "elapsed": 2.0,
     "finished": [
-      "bar"
+      "foo"
     ]
   },
   "baz": {
     "elapsed": 3.0,
     "finished": [
-      "bar",
-      "foo"
+      "foo",
+      "bar"
     ]
   },
   "qux": {
     "elapsed": 4.0,
     "finished": [
-      "bar",
       "foo",
+      "bar",
       "baz"
     ]
   },
   "xyzzy": {
     "elapsed": 5.0,
     "finished": [
-      "bar",
       "foo",
+      "bar",
       "baz",
       "qux"
     ]
@@ -49,63 +49,59 @@ $ python demo.py -d 1
   "quz": {
     "elapsed": 6.0,
     "finished": [
-      "bar",
       "foo",
+      "bar",
       "baz",
       "qux",
       "xyzzy"
     ]
   }
 }
-
 ```
 
 Parallel execution:
 ```json
 $ python demo.py -d 1 -p
 {
-  "bar": {
+  "foo": {
     "elapsed": 1.0,
     "finished": []
   },
-  "foo": {
-    "elapsed": 2.0,
+  "bar": {
+    "elapsed": 2.1,
     "finished": [
-      "bar"
-    ]
-  },
-  "baz": {
-    "elapsed": 3.0,
-    "finished": [
-      "bar",
       "foo"
     ]
   },
-  "qux": {
-    "elapsed": 4.0,
+  "baz": {
+    "elapsed": 3.1,
     "finished": [
-      "bar",
       "foo",
-      "baz"
+      "bar"
     ]
   },
   "xyzzy": {
-    "elapsed": 5.0,
+    "elapsed": 3.1,
     "finished": [
-      "bar",
       "foo",
-      "baz",
-      "qux"
+      "bar"
+    ]
+  },
+  "qux": {
+    "elapsed": 3.1,
+    "finished": [
+      "foo",
+      "bar"
     ]
   },
   "quz": {
-    "elapsed": 6.0,
+    "elapsed": 4.1,
     "finished": [
-      "bar",
       "foo",
+      "bar",
       "baz",
-      "qux",
-      "xyzzy"
+      "xyzzy",
+      "qux"
     ]
   }
 }
