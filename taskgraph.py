@@ -55,14 +55,17 @@ class TaskGraph:
         for taskset in toposort(self._graph):
             with Pool() as pool:
                 results = []
-                for task in taskset:
-                    results.append(
-                        pool.apply_async(
-                            getattr(obj, task), (deepcopy(data),) + args, kwargs
+                try:
+                    for task in taskset:
+                        results.append(
+                            pool.apply_async(
+                                getattr(obj, task), (deepcopy(data), *args), kwargs
+                            )
                         )
-                    )
-                for result in results:
-                    data.update(result.get())
+                    for result in results:
+                        data.update(result.get())
+                except TaskAborted:
+                    return None
 
         return data
 
