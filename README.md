@@ -1,36 +1,112 @@
 Running the code
 ----------------
+Print the graph:
+```
+$ python demo.py run -g
+
+	(bar, foo) -> (xyzzy, baz, qux) -> (quz)
+
+```
+
 Serial execution:
-```
-$ python demo.py -g
-bar -> foo -> baz -> qux -> xyzzy -> quz
-```
-
 ```json
-$ python demo.py -d 2
+$ python demo.py -d 1
 {
-  "bar": 2.0,
-  "foo": 4.0,
-  "baz": 6.0,
-  "qux": 8.0,
-  "xyzzy": 10.0,
-  "quz": 12.0
+  "bar": {
+    "elapsed": 1.0,
+    "finished": []
+  },
+  "foo": {
+    "elapsed": 2.0,
+    "finished": [
+      "bar"
+    ]
+  },
+  "baz": {
+    "elapsed": 3.0,
+    "finished": [
+      "bar",
+      "foo"
+    ]
+  },
+  "qux": {
+    "elapsed": 4.0,
+    "finished": [
+      "bar",
+      "foo",
+      "baz"
+    ]
+  },
+  "xyzzy": {
+    "elapsed": 5.0,
+    "finished": [
+      "bar",
+      "foo",
+      "baz",
+      "qux"
+    ]
+  },
+  "quz": {
+    "elapsed": 6.0,
+    "finished": [
+      "bar",
+      "foo",
+      "baz",
+      "qux",
+      "xyzzy"
+    ]
+  }
 }
-```
-Parallel execution:
-```
-$ python demo.py -g -p
-(bar, foo) -> (qux, xyzzy, baz) -> (quz)
+
 ```
 
+Parallel execution:
 ```json
-$ python demo.py -d 2 -p
+$ python demo.py -d 1 -p
 {
-  "bar": 2.0,
-  "foo": 2.0,
-  "qux": 4.0,
-  "baz": 4.0,
-  "xyzzy": 4.0,
-  "quz": 6.0
+  "bar": {
+    "elapsed": 1.0,
+    "finished": []
+  },
+  "foo": {
+    "elapsed": 2.0,
+    "finished": [
+      "bar"
+    ]
+  },
+  "baz": {
+    "elapsed": 3.0,
+    "finished": [
+      "bar",
+      "foo"
+    ]
+  },
+  "qux": {
+    "elapsed": 4.0,
+    "finished": [
+      "bar",
+      "foo",
+      "baz"
+    ]
+  },
+  "xyzzy": {
+    "elapsed": 5.0,
+    "finished": [
+      "bar",
+      "foo",
+      "baz",
+      "qux"
+    ]
+  },
+  "quz": {
+    "elapsed": 6.0,
+    "finished": [
+      "bar",
+      "foo",
+      "baz",
+      "qux",
+      "xyzzy"
+    ]
+  }
 }
 ```

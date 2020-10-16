@@ -23,37 +23,40 @@ class Job:
         }
 
     @task.requires()
-    def foo(self, data, delay):
+    def foo(self, data, delay, *args, **kwargs):
         data.update({ "foo": self.do_work(data, delay) })
         return data
 
-    @task.requires()
-    def bar(self, data, delay):
+    @task.requires(foo)
+    def bar(self, data, delay, *args, **kwargs):
         data.update({ "bar": self.do_work(data, delay) })
         return data
 
     @task.requires(bar)
-    def baz(self, data, delay):
+    def baz(self, data, delay, *args, **kwargs):
         data.update({ "baz": self.do_work(data, delay) })
         return data
 
     @task.requires(foo, bar)
-    def qux(self, data, delay):
+    def qux(self, data, delay, *args, **kwargs):
         data.update({ "qux": self.do_work(data, delay) })
         return data
 
     @task.requires(qux, baz)
-    def quz(self, data, delay):
+    def quz(self, data, delay, *args, **kwargs):
         data.update({ "quz": self.do_work(data, delay) })
         return data
 
     @task.requires(foo, bar)
-    def xyzzy(self, data, delay):
+    def xyzzy(self, data, delay, *args, **kwargs):
         data.update({ "xyzzy": self.do_work(data, delay) })
         return data
 
     def run(self, data, delay):
         return self.task.run(self, data, delay=delay)
+
+    def run_parallel(self, data, delay):
+        return self.task.run_parallel(self, data, delay=delay)
 
 
 @click.group()
@@ -71,7 +74,8 @@ def run(parallel, pool_size, delay, graph):
         raise SystemExit
 
     job = Job()
-    record = job.run({}, delay=delay)
+    run = job.run_parallel if parallel else job.run
+    record = run({}, delay=delay)
     print(json.dumps(record, indent=2))
 
 if __name__ == '__main__':

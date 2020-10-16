@@ -17,8 +17,7 @@ class TaskGraph:
     def __str__(self):
         '''Return formatted graph representation as string.
         '''
-        sep = "\n- "
-        return sep + sep.join(', '.join(s) for s in toposort(self._graph))
+        return '\n\t(' + ') -> ('.join(', '.join(s) for s in toposort(self._graph)) + ')\n'
 
     def __call__(self, require=None):
         '''Shortcut decorator for tasks with no dependencies.
@@ -49,17 +48,22 @@ class TaskGraph:
 
         return data
 
-    def run_parallel(self, obj, data, *args, pool_size=4, **kwargs):
+    def run_parallel(self, obj, data, *args, **kwargs):
         '''Run independent tasks in parallel, and pass the merged return values
         from each task group to the next task group.
         '''
-        for tasks in toposort(self._graph):
-            with Pool(processes=pool_size) as pool:
+        for taskset in toposort(self._graph):
+            with Pool(processes=4) as pool:
                 results = []
-                for task in tasks:
-                    results.append(pool.apply_async(getattr(obj, task), deepcopy(data), args, kwargs))
+                for task in taskset:
+                    results.append(
+                        pool.apply_async(
+                            getattr(obj, task), (deepcopy(data),) + args, kwargs
+                        )
+                    )
                 for result in results:
                     data.update(result.get())
+
         return data
 
 class TaskAborted(Exception):
